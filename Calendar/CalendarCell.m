@@ -29,16 +29,26 @@
 
 - (void)setDay:(NSInteger)day
 {
-    _day = day;
     if (day > 0) {
-        self.dayLabel.hidden = NO;
-        self.userInteractionEnabled = YES;
-        self.dayLabel.text = @(day).stringValue;
-        [self setNeedsLayout];
+        if (!self.userInteractionEnabled) {
+            self.userInteractionEnabled = YES;
+        }
+        if (self.dayLabel.hidden) {
+            self.dayLabel.hidden = NO;
+        }
+        if (_day != day) {
+            self.dayLabel.text = [NSString stringWithFormat:@"%ld", (long)day];
+        }
     } else {
-        self.dayLabel.hidden = YES;
-        self.userInteractionEnabled = NO;
+        if (self.userInteractionEnabled) {
+            self.userInteractionEnabled = NO;
+        }
+        if (!self.dayLabel.hidden) {
+            self.dayLabel.hidden = YES;
+        }
     }
+    _day = day;
+    [self setNeedsLayout];
 }
 
 - (void)layoutSubviews

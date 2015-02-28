@@ -107,12 +107,6 @@
     return cell;
 }
 
-- (void)collectionView:(UICollectionView *)collectionView willDisplaySupplementaryView:(UICollectionReusableView *)view
-        forElementKind:(NSString *)elementKind atIndexPath:(NSIndexPath *)indexPath
-{
-
-}
-
 
 #pragma mark - UIScrollView
 

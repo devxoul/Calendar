@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 Suyeol Jeon. All rights reserved.
 //
 
+#import <objc/runtime.h>
 #import "NSDate+CalendarUtils.h"
 
 @implementation NSDate (CalendarUtils)
@@ -58,21 +59,34 @@
 
 - (NSDate *)firstDateOfMonth
 {
-    NSDateComponents *components = [self.calendar components:(NSCalendarUnitDay | NSCalendarUnitWeekday |
-                                                              NSCalendarUnitMonth | NSCalendarUnitYear)
-                                                    fromDate:self];
-    components.day = 1;
-    return [self.calendar dateFromComponents:components];
+    NSDate *date = objc_getAssociatedObject(self, @selector(firstDateOfMonth));
+    if (!date) {
+        NSDateComponents *components = [self.calendar components:NSCalendarUnitDay fromDate:self];
+        components.day = 1;
+        date = [self.calendar dateFromComponents:components];
+        objc_setAssociatedObject(self, @selector(firstDateOfMonth), date, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return date;
 }
 
 - (NSInteger)firstWeekdayOfMonth
 {
-    return [self.calendar components:NSCalendarUnitWeekday fromDate:self.firstDateOfMonth].weekday;
+    NSNumber *weekday = objc_getAssociatedObject(self, @selector(firstWeekdayOfMonth));
+    if (!weekday) {
+        weekday = @([self.calendar components:NSCalendarUnitWeekday fromDate:self.firstDateOfMonth].weekday);
+        objc_setAssociatedObject(self, @selector(firstWeekdayOfMonth), weekday, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return weekday.integerValue;
 }
 
 - (NSInteger)columnForFirstDayInMonth
 {
-    return (self.firstWeekdayOfMonth - 1) % 7;
+    NSNumber *column = objc_getAssociatedObject(self, @selector(columnForFirstDayInMonth));
+    if (!column) {
+        column = @((self.firstWeekdayOfMonth - 1) % 7);
+        objc_setAssociatedObject(self, @selector(columnForFirstDayInMonth), column, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return column.integerValue;
 }
 
 - (NSInteger)numberOfWeeksInMonth

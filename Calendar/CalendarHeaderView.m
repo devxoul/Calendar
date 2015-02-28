@@ -34,15 +34,23 @@
     return 44;
 }
 
++ (NSDateFormatter *)formatter
+{
+    static NSDateFormatter *formatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        formatter = [[NSDateFormatter alloc] init];
+        formatter.dateFormat = [NSDateFormatter dateFormatFromTemplate:@"yyyyMMM"
+                                                               options:0
+                                                                locale:[NSLocale currentLocale]];
+    });
+    return formatter;
+}
+
 - (void)setDate:(NSDate *)date
 {
     _date = date;
-    NSString *template = (date.year == [NSDate date].year ? @"MMM" : @"yyyyMMM");
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    formatter.dateFormat = [NSDateFormatter dateFormatFromTemplate:template
-                                                           options:0
-                                                            locale:[NSLocale currentLocale]];
-    self.monthLabel.text = [formatter stringFromDate:date];
+    self.monthLabel.text = [self.class.formatter stringFromDate:date];
     [self setNeedsLayout];
 }
 
