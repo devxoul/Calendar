@@ -31,7 +31,7 @@
 
 + (CGFloat)height
 {
-    return 44;
+    return 30;
 }
 
 + (NSDateFormatter *)formatter
