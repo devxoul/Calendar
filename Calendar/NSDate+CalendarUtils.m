@@ -12,11 +12,27 @@
 @implementation NSDate (CalendarUtils)
 
 
+#pragma mark - Cache
+
+- (id)cachedValueForKey:(const void *)key cacheBlock:(id (^)(void))cacheBlock
+{
+    id value = objc_getAssociatedObject(self, key);
+    if (!value) {
+        value = cacheBlock();
+        objc_setAssociatedObject(self, key, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return value;
+}
+
+
 #pragma mark - Calendar
 
 - (NSCalendar *)calendar
 {
-    return [NSCalendar currentCalendar];
+    return [self cachedValueForKey:@selector(year)
+                  cacheBlock:^id {
+                      return [NSCalendar currentCalendar];
+                  }];
 }
 
 
@@ -24,17 +40,26 @@
 
 - (NSInteger)year
 {
-    return [self.calendar components:NSCalendarUnitYear fromDate:self].year;
+    return [[self cachedValueForKey:@selector(year)
+                         cacheBlock:^id {
+                             return @([self.calendar components:NSCalendarUnitYear fromDate:self].year);
+                         }] integerValue];
 }
 
 - (NSInteger)month
 {
-    return [self.calendar components:NSCalendarUnitMonth fromDate:self].month;
+    return [[self cachedValueForKey:@selector(month)
+                         cacheBlock:^id {
+                             return @([self.calendar components:NSCalendarUnitYear fromDate:self].month);
+                         }] integerValue];
 }
 
 - (NSInteger)day
 {
-    return [self.calendar components:NSCalendarUnitDay fromDate:self].day;
+    return [[self cachedValueForKey:@selector(day)
+                         cacheBlock:^id {
+                             return @([self.calendar components:NSCalendarUnitYear fromDate:self].day);
+                         }] integerValue];
 }
 
 
@@ -42,12 +67,18 @@
 
 - (NSDate *)prevMonth
 {
-    return [self dateByAddingMonth:-1];
+    return [self cachedValueForKey:@selector(prevMonth)
+                        cacheBlock:^id {
+                            return [self dateByAddingMonth:-1];
+                        }];
 }
 
 - (NSDate *)nextMonth
 {
-    return [self dateByAddingMonth:1];
+    return [self cachedValueForKey:@selector(nextMonth)
+                        cacheBlock:^id {
+                            return [self dateByAddingMonth:+1];
+                        }];
 }
 
 - (NSDate *)dateByAddingMonth:(NSInteger)month
@@ -59,44 +90,52 @@
 
 - (NSDate *)firstDateOfMonth
 {
-    NSDate *date = objc_getAssociatedObject(self, @selector(firstDateOfMonth));
-    if (!date) {
-        NSDateComponents *components = [self.calendar components:NSCalendarUnitDay fromDate:self];
-        components.day = 1;
-        date = [self.calendar dateFromComponents:components];
-        objc_setAssociatedObject(self, @selector(firstDateOfMonth), date, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-    return date;
+    return [self cachedValueForKey:@selector(firstDateOfMonth)
+                        cacheBlock:^id {
+                            NSDateComponents *components = [self.calendar components:(NSCalendarUnitDay |
+                                                                                      NSCalendarUnitMonth |
+                                                                                      NSCalendarUnitYear)
+                                                                            fromDate:self];
+                            components.day = 1;
+                            return [self.calendar dateFromComponents:components];
+                        }];
 }
 
 - (NSInteger)firstWeekdayOfMonth
 {
-    NSNumber *weekday = objc_getAssociatedObject(self, @selector(firstWeekdayOfMonth));
-    if (!weekday) {
-        weekday = @([self.calendar components:NSCalendarUnitWeekday fromDate:self.firstDateOfMonth].weekday);
-        objc_setAssociatedObject(self, @selector(firstWeekdayOfMonth), weekday, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-    return weekday.integerValue;
+    return [[self cachedValueForKey:@selector(firstWeekdayOfMonth)
+                         cacheBlock:^id {
+                             return @([self.calendar components:NSCalendarUnitWeekday
+                                                       fromDate:self.firstDateOfMonth].weekday);
+                         }] integerValue];
 }
 
 - (NSInteger)columnForFirstDayInMonth
 {
-    NSNumber *column = objc_getAssociatedObject(self, @selector(columnForFirstDayInMonth));
-    if (!column) {
-        column = @((self.firstWeekdayOfMonth - 1) % 7);
-        objc_setAssociatedObject(self, @selector(columnForFirstDayInMonth), column, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-    return column.integerValue;
+    return [[self cachedValueForKey:@selector(columnForFirstDayInMonth)
+                         cacheBlock:^id {
+                             return @((self.firstWeekdayOfMonth - 1) % 7);
+                         }] integerValue];
 }
 
 - (NSInteger)numberOfWeeksInMonth
 {
-    return [self.calendar rangeOfUnit:NSCalendarUnitWeekOfMonth inUnit:NSCalendarUnitMonth forDate:self].length;
+    return [[self cachedValueForKey:@selector(numberOfWeeksInMonth)
+                         cacheBlock:^id {
+                             return @([self.calendar rangeOfUnit:NSCalendarUnitWeekOfMonth
+                                                          inUnit:NSCalendarUnitMonth
+                                                         forDate:self].length);
+                         }] integerValue];
 }
 
 - (NSInteger)numberOfDaysInMonth
 {
-    return [self.calendar rangeOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitMonth forDate:self].length;
+    return [[self cachedValueForKey:@selector(numberOfDaysInMonth)
+                         cacheBlock:^id {
+                             return @([self.calendar rangeOfUnit:NSCalendarUnitDay
+                                                          inUnit:NSCalendarUnitMonth
+                                                         forDate:self].length);
+                         }] integerValue];
 }
 
 
