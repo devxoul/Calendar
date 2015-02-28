@@ -75,6 +75,11 @@
     return (self.firstWeekdayOfMonth - 1) % 7;
 }
 
+- (NSInteger)numberOfWeeksInMonth
+{
+    return [self.calendar rangeOfUnit:NSCalendarUnitWeekOfMonth inUnit:NSCalendarUnitMonth forDate:self].length;
+}
+
 - (NSInteger)numberOfDaysInMonth
 {
     return [self.calendar rangeOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitMonth forDate:self].length;

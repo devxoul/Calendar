@@ -29,7 +29,11 @@
 {
     self = [super init];
     if (self) {
-        self.visibleMonths = @[date.prevMonth, date, date.nextMonth, date.nextMonth.nextMonth].mutableCopy;
+        self.visibleMonths = @[[date dateByAddingMonth:-2],
+                               date.prevMonth,
+                               date,
+                               date.nextMonth,
+                               [date dateByAddingMonth:2]].mutableCopy;
     }
     return self;
 }
@@ -38,8 +42,8 @@
 {
     [super viewDidLoad];
 
-    CGFloat headerHeight = 44;
-    CGFloat cellWidth = CGRectGetWidth(self.view.bounds) / 7;
+    CGFloat headerHeight = [CalendarHeaderView height];
+    NSInteger cellWidth = CGRectGetWidth(self.view.bounds) / 7;
 
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.headerReferenceSize = CGSizeMake(CGRectGetWidth(self.view.bounds), headerHeight);
@@ -48,11 +52,12 @@
     layout.minimumLineSpacing = 0;
 
     self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:layout];
+    self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.collectionView.backgroundColor = [UIColor whiteColor];
     self.collectionView.dataSource = self;
     self.collectionView.delegate = self;
     self.collectionView.showsHorizontalScrollIndicator = NO;
-//    self.collectionView.showsVerticalScrollIndicator = NO;
+    self.collectionView.showsVerticalScrollIndicator = NO;
     [self.collectionView registerClass:CalendarCell.class forCellWithReuseIdentifier:@"cell"];
     [self.collectionView registerClass:CalendarHeaderView.class
             forSupplementaryViewOfKind:UICollectionElementKindSectionHeader
@@ -96,8 +101,64 @@
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     CalendarCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.day = indexPath.item + 1;
+    NSDate *month = self.visibleMonths[indexPath.section];
+    cell.day = indexPath.item - month.columnForFirstDayInMonth + 1;
     return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView willDisplaySupplementaryView:(UICollectionReusableView *)view
+        forElementKind:(NSString *)elementKind atIndexPath:(NSIndexPath *)indexPath
+{
+
+}
+
+
+#pragma mark - UIScrollView
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    if (scrollView.contentOffset.y <= 0) {
+        [self preparePrevMonth];
+    } else if (scrollView.contentOffset.y >= scrollView.contentSize.height - CGRectGetHeight(scrollView.bounds)) {
+        [self prepareNextMonth];
+    }
+}
+
+
+#pragma mark - Prepare Month
+
+- (void)preparePrevMonth
+{
+    self.collectionView.delegate = nil;
+
+    NSDate *firstMonth = self.visibleMonths.firstObject;
+    [self.visibleMonths removeLastObject];
+    [self.visibleMonths insertObject:firstMonth.prevMonth atIndex:0];
+
+    firstMonth = self.visibleMonths.firstObject;
+    UICollectionViewFlowLayout *layout = (UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
+    CGFloat sectionHeight = firstMonth.numberOfWeeksInMonth * layout.itemSize.height + [CalendarHeaderView height];
+    self.collectionView.contentOffset = CGPointMake(0, sectionHeight);
+    [self.collectionView reloadData];
+
+    self.collectionView.delegate = self;
+}
+
+- (void)prepareNextMonth
+{
+    self.collectionView.delegate = nil;
+
+    NSDate *firstMonth = self.visibleMonths.firstObject;
+    NSDate *lastMonth = self.visibleMonths.lastObject;
+    [self.visibleMonths removeObjectAtIndex:0];
+    [self.visibleMonths addObject:lastMonth.nextMonth];
+
+    UICollectionViewFlowLayout *layout = (UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
+    CGFloat sectionHeight = firstMonth.numberOfWeeksInMonth * layout.itemSize.height + [CalendarHeaderView height];
+    self.collectionView.contentOffset = CGPointMake(0, self.collectionView.contentOffset.y - sectionHeight);
+    [self.collectionView reloadData];
+
+    self.collectionView.delegate = self;
 }
 
 @end

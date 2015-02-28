@@ -19,6 +19,7 @@
 - (NSDate *)firstDateOfMonth;
 - (NSInteger)firstWeekdayOfMonth;
 - (NSInteger)columnForFirstDayInMonth;
+- (NSInteger)numberOfWeeksInMonth;
 - (NSInteger)numberOfDaysInMonth;
 
 @end

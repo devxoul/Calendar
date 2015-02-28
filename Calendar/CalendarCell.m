@@ -30,12 +30,14 @@
 - (void)setDay:(NSInteger)day
 {
     _day = day;
-    if (day) {
+    if (day > 0) {
         self.dayLabel.hidden = NO;
+        self.userInteractionEnabled = YES;
         self.dayLabel.text = @(day).stringValue;
         [self setNeedsLayout];
     } else {
         self.dayLabel.hidden = YES;
+        self.userInteractionEnabled = NO;
     }
 }
 

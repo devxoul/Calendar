@@ -29,6 +29,11 @@
     return self;
 }
 
++ (CGFloat)height
+{
+    return 44;
+}
+
 - (void)setDate:(NSDate *)date
 {
     _date = date;
