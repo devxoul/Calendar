@@ -58,6 +58,7 @@
     self.collectionView.delegate = self;
     self.collectionView.showsHorizontalScrollIndicator = NO;
     self.collectionView.showsVerticalScrollIndicator = NO;
+    self.collectionView.scrollsToTop = NO;
     [self.collectionView registerClass:CalendarCell.class forCellWithReuseIdentifier:@"cell"];
     [self.collectionView registerClass:CalendarHeaderView.class
             forSupplementaryViewOfKind:UICollectionElementKindSectionHeader
