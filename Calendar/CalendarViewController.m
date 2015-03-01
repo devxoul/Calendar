@@ -83,7 +83,8 @@
     self.visibleMonths = @[today.prevMonth, today, today.nextMonth, [today dateByAddingMonth:2]].mutableCopy;
     [self.collectionView reloadData];
     CGFloat sectionHeight = [self sectionHeightForMonth:self.visibleMonths.firstObject];
-    self.collectionView.contentOffset = CGPointMake(0, sectionHeight - self.collectionView.contentInset.top);
+    [self.collectionView setContentOffset:CGPointMake(0, sectionHeight - self.collectionView.contentInset.top)
+                                 animated:NO];
 }
 
 
