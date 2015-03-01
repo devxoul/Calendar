@@ -29,11 +29,7 @@
 {
     self = [super init];
     if (self) {
-        self.visibleMonths = @[[date dateByAddingMonth:-2],
-                               date.prevMonth,
-                               date,
-                               date.nextMonth,
-                               [date dateByAddingMonth:2]].mutableCopy;
+        self.visibleMonths = @[date.prevMonth, date, date.nextMonth, [date dateByAddingMonth:2]].mutableCopy;
     }
     return self;
 }
@@ -41,6 +37,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+
+    UIBarButtonItem *todayButton = [[UIBarButtonItem alloc] initWithTitle:@"Today"
+                                                                    style:UIBarButtonItemStylePlain
+                                                                   target:self
+                                                                   action:@selector(todayButtonDidTap)];
+    self.navigationItem.rightBarButtonItem = todayButton;
 
     CGFloat headerHeight = [CalendarHeaderView height];
     NSInteger cellWidth = CGRectGetWidth(self.view.bounds) / 7;
@@ -70,6 +72,18 @@
                                 atScrollPosition:UICollectionViewScrollPositionTop
                                         animated:NO];
     self.collectionView.contentOffset = CGPointMake(0, self.collectionView.contentOffset.y - headerHeight);
+}
+
+
+#pragma mark - Navigation Item Actions
+
+- (void)todayButtonDidTap
+{
+    NSDate *today = [NSDate date];
+    self.visibleMonths = @[today.prevMonth, today, today.nextMonth, [today dateByAddingMonth:2]].mutableCopy;
+    [self.collectionView reloadData];
+    CGFloat sectionHeight = [self sectionHeightForMonth:self.visibleMonths.firstObject];
+    self.collectionView.contentOffset = CGPointMake(0, sectionHeight - self.collectionView.contentInset.top);
 }
 
 
@@ -112,15 +126,22 @@
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
-    if (scrollView.contentOffset.y <= 0) {
+    CGFloat offset = scrollView.contentOffset.y + scrollView.contentInset.top;
+    if (offset <= 0) {
         [self preparePrevMonth];
-    } else if (scrollView.contentOffset.y >= scrollView.contentSize.height - CGRectGetHeight(scrollView.bounds)) {
+    } else if (offset >= scrollView.contentSize.height - CGRectGetHeight(scrollView.bounds)) {
         [self prepareNextMonth];
     }
 }
 
 
 #pragma mark - Prepare Month
+
+- (CGFloat)sectionHeightForMonth:(NSDate *)month
+{
+    UICollectionViewFlowLayout *layout = (UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
+    return month.numberOfWeeksInMonth * layout.itemSize.height + [CalendarHeaderView height];
+}
 
 - (void)preparePrevMonth
 {
@@ -131,9 +152,8 @@
     [self.visibleMonths insertObject:firstMonth.prevMonth atIndex:0];
 
     firstMonth = self.visibleMonths.firstObject;
-    UICollectionViewFlowLayout *layout = (UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
-    CGFloat sectionHeight = firstMonth.numberOfWeeksInMonth * layout.itemSize.height + [CalendarHeaderView height];
-    self.collectionView.contentOffset = CGPointMake(0, sectionHeight);
+    CGFloat sectionHeight = [self sectionHeightForMonth:firstMonth];
+    self.collectionView.contentOffset = CGPointMake(0, sectionHeight - self.collectionView.contentInset.top);
     [self.collectionView reloadData];
 
     self.collectionView.delegate = self;
@@ -148,8 +168,7 @@
     [self.visibleMonths removeObjectAtIndex:0];
     [self.visibleMonths addObject:lastMonth.nextMonth];
 
-    UICollectionViewFlowLayout *layout = (UICollectionViewFlowLayout *)self.collectionView.collectionViewLayout;
-    CGFloat sectionHeight = firstMonth.numberOfWeeksInMonth * layout.itemSize.height + [CalendarHeaderView height];
+    CGFloat sectionHeight = [self sectionHeightForMonth:firstMonth];
     self.collectionView.contentOffset = CGPointMake(0, self.collectionView.contentOffset.y - sectionHeight);
     [self.collectionView reloadData];
 

@@ -19,7 +19,10 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     self.window.backgroundColor = [UIColor whiteColor];
-    self.window.rootViewController = [[CalendarViewController alloc] init];
+
+    CalendarViewController *cal = [[CalendarViewController alloc] init];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:cal];
+    self.window.rootViewController = nav;
     [self.window makeKeyAndVisible];
     return YES;
 }
